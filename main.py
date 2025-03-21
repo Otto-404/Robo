@@ -47,9 +47,9 @@ while True:
         preto = True
     else:
         preto = False
-    if (anteriorPreto !=)
+    if (anteriorPreto != 1):
     # Calcula a taxa de rotação
-    Turn_Rate = Gain * Curve
+     Turn_Rate = Gain * Curve
     # Define a velocidade base e a taxa de rotação baseada nos cálculos anteriores
     robo.drive(Speed, Turn_Rate)
     signal = signal*(-1)
