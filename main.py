@@ -9,6 +9,14 @@ from pybricks.media.ev3dev import SoundFile, ImageFile
 from time import sleep
 from threading import Thread
 
+eve3 = EV3Brick()
+
+def printValue(text: str):
+    print(text)
+    eve3.screen.clear()
+    eve3.screen.draw_text(1, 1, text)
+    
+
 # Inicializa os Motores
 Motor_Left = Motor(Port.B)
 Motor_Right = Motor(Port.C)
@@ -26,16 +34,16 @@ robo = DriveBase(Motor_Left, Motor_Right,wheel_diameter=55.5, axle_track=117)
 Line = 2
 Floor = 27
 Limit = (Line + Floor) / 2
-Distance_Upper = 30
-Distance_Lower = 10
+Distance_Upper = 8
+Distance_Lower = 2
 Limit_Obstacle = (Distance_Upper - Distance_Lower) / 2
 # Define a velocidade do robo a um valor x milimetros por segundo.
-Speed = 140
 Gain = 7
 
 
 
 while True:
+    Speed = 140
     print(Sensor_Color.reflection())
     # Calcula o desvio do limite.
     Distance = Sensor_Distance.distance()
@@ -48,10 +56,19 @@ while True:
     # if obstaculo
     while Distance <= Distance_Upper and Distance >= Distance_Lower:
         robo.stop()
-        Turn_Rate = (Gain * 5)
+        robo.turn(110)
+        robo.straight(200)
+        robo.turn(-110)
+        robo.straight(440)
+        robo.turn(-110)
+        while Light > 10:
+            Light = Sensor_Color.reflection()
+            printValue(Light)
+            print(Sensor_Color.reflection())
+            robo.drive(Speed,0)
+        robo.straight(60)
         robo.turn(90)
-        robo.drive(Speed, Turn_Rate)
-        wait (1000)
+        wait (100)
         break
 
     wait(10)
