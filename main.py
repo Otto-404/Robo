@@ -38,12 +38,11 @@ Distance_Upper = 8
 Distance_Lower = 2
 Limit_Obstacle = (Distance_Upper - Distance_Lower) / 2
 # Define a velocidade do robo a um valor x milimetros por segundo.
-Gain = 7
-
+Gain = 8
 
 
 while True:
-    Speed = 140
+    Speed = 160 #160
     print(Sensor_Color.reflection())
     # Calcula o desvio do limite.
     Distance = Sensor_Distance.distance()
@@ -56,19 +55,18 @@ while True:
     # if obstaculo
     while Distance <= Distance_Upper and Distance >= Distance_Lower:
         robo.stop()
-        robo.turn(110)
-        robo.straight(200)
-        robo.turn(-110)
-        robo.straight(440)
-        robo.turn(-110)
+        robo.turn(-100)
+        robo.straight(250)
+        robo.turn(90)
+        robo.straight(500)
+        robo.turn(90)
         while Light > 10:
             Light = Sensor_Color.reflection()
             printValue(Light)
             print(Sensor_Color.reflection())
             robo.drive(Speed,0)
-        robo.straight(60)
-        robo.turn(90)
+        robo.straight(40)
+        robo.turn(-110)
         wait (100)
         break
-
     wait(10)
