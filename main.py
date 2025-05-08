@@ -1,12 +1,33 @@
 #!/usr/bin/env pybricks-micropython
 from pybricks.hubs import EV3Brick
-from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
-                                 InfraredSensor, UltrasonicSensor, GyroSensor)
+from pybricks.ev3devices import (Motor, ColorSensor,InfraredSensor)
+from pybricks.parameters import Port
+from pybricks.tools import wait
 from pybricks.parameters import Port, Stop, Direction, Button, Color
-from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
-from pybricks.media.ev3dev import SoundFile, ImageFile
-from time import sleep
+from pybricks.parameters import Port
+from time import sleep, time
+#Ports
+PORT_MOTOR_LEFT = Port.B
+PORT_MOTOR_RIGHT = Port.C
+PORT_SENSOR_COLOR = Port.S3
+
+# Var Colors
+LINE = 2
+FLOOR = 27
+LIMIT = (LINE + FLOOR) / 2
+
+# VAR MOTORS
+WHEEL_DIAMETER = 55.5
+AXEL_TRACK = 147
+TURN_CORRECTION = 1
+SPEED = 1000
+GAIN = 7
+DISTANCE_CORRECT = 1
+TURN_CORRECT_LEFT = 1
+TURN_CORRECT_RIGHT = 1
+
+MAX_TIME_IN_BLANK = 1000
 
 eve3 = EV3Brick()
 
@@ -16,56 +37,110 @@ def printValue(text: str):
     eve3.screen.draw_text(1, 1, text)
     
 
-# Inicializa os Motores
-Motor_Left = Motor(Port.B)
-Motor_Right = Motor(Port.C)
+Sensor_Color = ColorSensor(PORT_SENSOR_COLOR)
 
-# Inicializa o sensor de Cor.
-Sensor_Color = ColorSensor(Port.S3)
+class Robo:
+    def __init__(self):
+        Motor_Left = Motor(Port.B)
+        Motor_Right = Motor(Port.C)
+        Motor_Left.reset_angle(100)
+        self.motor = DriveBase(Motor_Left, Motor_Right,wheel_diameter=WHEEL_DIAMETER, axle_track=AXEL_TRACK)
+        self.motor.settings(straight_speed=5000, straight_acceleration=10000)
+    
+    def drive(self, speed, angle):
+        self.motor.drive(-speed, -angle)
 
-# Inicializa o sensor infravermelho
-Sensor_Distance = InfraredSensor(Port.S2)
+    def stop(self):
+        self.motor.stop()
 
-# Inicializa o Objeto Drive Base, que controla os motores de forma paralela automaticamente
-robo = DriveBase(Motor_Left, Motor_Right,wheel_diameter=55.5, axle_track=117)
-
-# Calcule o limiar de luz.
-Line = 2
-Floor = 27
-Limit = (Line + Floor) / 2
-Distance_Upper = 6
-Distance_Lower = 2
-Limit_Obstacle = (Distance_Upper - Distance_Lower) / 2
-# Define a velocidade do robo a um valor x milimetros por segundo.
-Gain = 7
+    def straight(self, distancia):
+        self.motor.straight(-0.4481 * distancia) 
+    def turn(self, angulo):
+        angulo = -angulo
+        angulo_novo = 0
+        if (angulo > 0):
+            angulo_novo = 1.10092* angulo
+        else:
+            angulo_novo = 1.052632 * angulo
+        self.motor.turn(angulo_novo)
 
 
+def inLine(light):
+    if light < LIMIT:
+        return print("Encontrei a linha preta")
+    else:
+        return print("Estou na linha branca")
+
+
+robo = Robo()
+
+    
 while True:
-    Speed = 160 #160
-    print(Sensor_Color.reflection())
-    # Calcula o desvio do limite.
-    Distance = Sensor_Distance.distance()
-    Light = Sensor_Color.reflection()
-    Curve = Light - Limit
-    # Calcula a taxa de rotação
-    Turn_Rate = Gain * Curve
-    # Define a velocidade base e a taxa de rotação baseada nos cálculos anteriores
-    robo.drive(Speed, Turn_Rate)
-    # if obstaculo
-    while Distance <= Distance_Upper and Distance >= Distance_Lower:
-        robo.stop()
-        robo.turn(-90)
-        robo.straight(250)
-        robo.turn(80)
-        robo.straight(480)
-        robo.turn(90)
-        while Light > 7:
-            Light = Sensor_Color.reflection()
-            printValue(Light)
-            print(Sensor_Color.reflection())
-            robo.drive(Speed,0)
-        robo.straight(30)
-        robo.turn(-110)
-        wait (100)
-        break
-    wait(10)
+    #Start
+    robo.drive(SPEED,0)
+    wait(1750)
+    robo.drive(SPEED,72)
+    wait(500)
+    robo.drive(SPEED,0)
+    wait(1300)
+    robo.drive(SPEED,-67)
+    wait(500)
+    robo.drive(SPEED,0)
+    wait(1200)
+    robo.drive(SPEED,-60)
+    wait(500)
+    robo.drive(SPEED,0)
+    wait(1500)
+    robo.drive(SPEED,73)
+    wait(500)
+    robo.drive(SPEED,0)
+    wait(1250)
+    #Checkpoint 1
+    robo.drive(SPEED,45)
+    wait(500)
+    robo.drive(SPEED,0)
+    wait(800)
+    robo.drive(SPEED,-50)
+    wait(400)
+    robo.drive(SPEED,0)
+    wait(1600)
+    robo.drive(SPEED,-40)
+    wait(400)
+    robo.drive(SPEED,0)
+    wait(1000)
+    robo.drive(SPEED,45)
+    wait(1500)
+    robo.drive(SPEED,0)
+    wait(400)
+    robo.drive(SPEED,-33)
+    wait(1500)
+    robo.drive(SPEED,0)
+    wait(1900)
+    robo.drive(SPEED,-75)
+    wait(500)
+    #Checkpoint 2
+    robo.drive(SPEED,0)
+    wait(1200)
+    robo.drive(SPEED,70)
+    wait(500)
+    robo.drive(SPEED,0)
+    wait(700)
+    robo.drive(SPEED,75)
+    wait(500)
+    robo.drive(SPEED,0)
+    wait(1200)
+    robo.drive(SPEED,-70)
+    wait(500)
+    robo.drive(SPEED,0)
+    wait(500)
+    robo.drive(SPEED,-65)
+    wait(500)
+    robo.drive(SPEED,0)
+    wait(800)
+    robo.drive(SPEED,65)
+    wait(500)
+    robo.drive(SPEED,0)
+    wait(3000)
+    robo.stop
+    break
+ 
