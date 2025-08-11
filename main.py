@@ -4,7 +4,7 @@ from collections import namedtuple
 import urandom
 
 from pybricks.hubs import EV3Brick
-from pybricks.ev3devices import Motor, UltrasonicSensor, ColorSensor, GyroSensor
+from pybricks.ev3devices import Motor, UltrasonicSensor, ColorSensor, GyroSensor, TouchSensor
 from pybricks.parameters import Port, Color
 from pybricks.media.ev3dev import ImageFile, SoundFile
 from pybricks.tools import wait, StopWatch
@@ -30,6 +30,9 @@ gyro_sensor = GyroSensor(Port.S2)
 # Initialize the ultrasonic sensor. It is used to detect when the robot gets
 # too close to an obstruction.
 ultrasonic_sensor = UltrasonicSensor(Port.S4)
+
+# Initialize the touch sensor. It is used to start the program when pressed.
+touch_sensor = TouchSensor(Port.S3)
 
 # Initialize the timers.
 fall_timer = StopWatch()
@@ -123,9 +126,9 @@ def update_action():
                 action = new_action
             yield action
 
-        # If the measured distance of the ultrasonic sensor is less than 250
+        # If the measured distance of the ultrasonic sensor is less than 100
         # millimeters, then back up slowly.
-        if ultrasonic_sensor.distance() < 250:
+        if ultrasonic_sensor.distance() < 100:
             # Back up slowly while wiggling the arms back and forth.
             yield BACKWARD_SLOW
 
@@ -219,10 +222,30 @@ while True:
             break
     gyro_offset = gyro_sum / GYRO_CALIBRATION_LOOP_COUNT
 
-    # Awake eyes and green light let us know that the robot is ready to go!
-    ev3.speaker.play_file(SoundFile.SPEED_UP)
-    ev3.screen.load_image(ImageFile.AWAKE)
+    # Play the start sound and show the awake image.
     ev3.light.on(Color.GREEN)
+
+    if not touch_sensor.pressed():
+        # If the touch sensor is not pressed, wait until it is pressed.
+        while not touch_sensor.pressed():
+            wait(10)
+        # If the touch sensor is pressed, wait a little bit to make sure that
+        # the robot is not moving before starting the control loop.
+        wait(1000)
+        # Awake eyes and green light let us know that the robot is ready to go!
+        ev3.speaker.play_file(SoundFile.READY)
+        ev3.screen.load_image(ImageFile.AWAKE)
+        ev3.light.off()
+
+
+    if not touch_sensor.pressed():
+        # If the touch sensor is not pressed, wait until it is pressed.
+        while not touch_sensor.pressed():
+            wait(10)
+        # If the touch sensor is pressed, wait a little bit to make sure that
+        # the robot is not moving before starting the control loop.
+        ev3.speaker.play_file(SoundFile.CONFIRM)
+        wait(1000)
 
     # Main control loop for balancing the robot.
     while True:
@@ -276,6 +299,16 @@ while True:
         left_motor.dc(output_power - 0.1 * steering)
         right_motor.dc(output_power + 0.1 * steering)
 
+        # If the touch sensor is pressed, stop the robot.
+        if touch_sensor.pressed():
+            # If the touch sensor is pressed, we stop the motors and exit the loop.
+            stop_action()
+            left_motor.stop()
+            right_motor.stop()
+            ev3.screen.load_image(ImageFile.DIZZY)
+            ev3.speaker.play_file(SoundFile.AIR_RELEASE)
+            break
+
         # Check if robot fell down. If the output speed is +/-100% for more
         # than one second, we know that we are no longer balancing properly.
         if abs(output_power) < 100:
@@ -292,6 +325,8 @@ while True:
         # calculation above depends on having a certain amount of time in each
         # loop.
         wait(TARGET_LOOP_PERIOD - single_loop_timer.time())
+        
+
 
     # Handle falling over. If we get to this point in the program, it means
     # that the robot fell over.
@@ -305,7 +340,7 @@ while True:
     # balance.
     ev3.light.on(Color.RED)
     ev3.screen.load_image(ImageFile.KNOCKED_OUT)
-    ev3.speaker.play_file(SoundFile.SPEED_DOWN)
+    ev3.speaker.play_file(SoundFile.GENERAL_ALERT)
 
     # Wait for a few seconds before trying to balance again.
     wait(3000)
